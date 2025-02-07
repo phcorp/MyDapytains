@@ -1,0 +1,48 @@
+name: DTS-Validator
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Install MyDapytains
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Set-up validator
+      - uses: actions/checkout@v4
+        name: Clone DTS-Validator
+        with:
+          repository: 'mromanello/DTS-validator'
+          ref: 'v0.2.0'
+          path: "dts-validator"
+
+      # Flask Server
+      - name: Start Flask server
+        run: |
+          python -m dapitains.app.app &
+      - name: Wait for Flask server to start
+        run: sleep 5 # Adjust as needed
+
+      - name: Install and run tests
+        run: | 
+          cd dts-validator
+          python -m venv env
+          source env/bin/activate
+          pip install poetry
+          poetry install
+          pytest --entry-endpoint=http://localhost:5000

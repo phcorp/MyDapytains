@@ -1,6 +1,8 @@
 MyDapytains
 ===========
 
+[![Flask Server Tests](https://github.com/distributed-text-services/MyDapytains/actions/workflows/dts-validator.yml/badge.svg)](https://github.com/distributed-text-services/MyDapytains/actions/workflows/dts-validator.yml)
+
 *The name of the library is completely temporary*.
 
 This library offers a base python implementation of the following functionalities:
