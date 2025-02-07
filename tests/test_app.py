@@ -55,7 +55,7 @@ def test_index(client):
         '@id': 'http://localhost//',
         '@type': 'EntryPoint',
         'dtsVersion': '1-alpha',
-        'collection': 'http://localhost:5000/collection/{?id,nav}',
+        'collection': 'http://localhost:5000/collection/{?id}{&nav}',
         'document': 'http://localhost:5000/document/{?resource}{&ref,start,end,tree}',
         'navigation': 'http://localhost:5000/navigation/{?resource}{&ref,start,end,tree,down}',
     }
