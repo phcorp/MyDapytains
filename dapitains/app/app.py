@@ -63,8 +63,8 @@ def collection_view(
             inj ={"collection": templates["collection"].partial({"id": related.identifier}).uri}
 
         inj.update({
-            "totalParents": coll.total_parents,
-            "totalChildren": coll.total_children
+            "totalParents": related.total_parents,
+            "totalChildren": related.total_children
         })
 
         return inj
@@ -73,16 +73,14 @@ def collection_view(
         "@context": "https://distributed-text-services.github.io/specifications/context/1-alpha1.json",
         "dtsVersion": "1-alpha",
         **out,
-        "totalParents": coll.total_parents,
-        "totalChildren": coll.total_children,
-        "collection": templates["collection"].uri,
         "member": [
-                related.json(
-                    inject=inject_json(related)
-                )
-                for related in related_collections
-            ]
-    }), mimetype="application/ld+json", status=200)
+            related.json(
+                inject=inject_json(related)
+            )
+            for related in related_collections
+        ],
+        **inject_json(coll)
+    }, ), mimetype="application/ld+json", status=200)
 
 
 def document_view(resource, ref, start, end, tree) -> Response:
@@ -209,7 +207,7 @@ def create_app(
     Initialisation of the DB is up to you
     """
     navigation_template = uritemplate.URITemplate(base_uri+"/navigation/{?resource}{&ref,start,end,tree,down}")
-    collection_template = uritemplate.URITemplate(base_uri+"/collection/{?id,nav}")
+    collection_template = uritemplate.URITemplate(base_uri+"/collection/{?id}{&nav}")
     document_template = uritemplate.URITemplate(base_uri+"/document/{?resource}{&ref,start,end,tree}")
 
     @app.route("/")
