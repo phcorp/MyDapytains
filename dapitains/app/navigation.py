@@ -25,8 +25,11 @@ def get_member_by_path(data: List[Dict[str, Any]], path: List[int]) -> Optional[
     return current_level
 
 
-def strip_members(obj: Dict[str, Any]) -> Dict[str, Any]:
-    return {k: v for k, v in obj.items() if k != "members"}
+def strip_members(obj: Dict[str, Any], add_type: bool = False) -> Dict[str, Any]:
+    obj = {k: v for k, v in obj.items() if k != "members"}
+    if add_type:
+        obj["@type"] = "CitableUnit"
+    return obj
 
 
 def generate_paths(data: List[Dict[str, Any]], path: Optional[List[int]] = None) -> Dict[str, List[int]]:
@@ -86,7 +89,6 @@ def get_nav(
         end_index = paths_index.index(end)
         len_end = len(paths[end])
         for idx, reference in enumerate(paths_index[end_index+1:]):
-            # print(paths[:len_end], paths[end])
             if paths[reference][:len_end] == paths[end]:
                 end_index = end_index+idx
             else:
@@ -126,8 +128,8 @@ def get_nav(
 
     return (
         [
-            strip_members(get_member_by_path(refs, path)) for path in paths.values()
+            strip_members(get_member_by_path(refs, path), add_type=True) for path in paths.values()
         ],
-        strip_members(get_member_by_path(refs, start_path)) if start_path else None,
-        strip_members(get_member_by_path(refs, end_path)) if end_path else None
+        strip_members(get_member_by_path(refs, start_path), add_type=True) if start_path else None,
+        strip_members(get_member_by_path(refs, end_path), add_type=True) if end_path else None
     )

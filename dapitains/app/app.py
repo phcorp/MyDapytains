@@ -159,19 +159,19 @@ def navigation_view(resource, ref, start, end, tree, down, templates: Dict[str, 
         "@id": templates["navigation"].expand({
             "ref": ref, "down": down, "start": start, "end": end, "tree": tree
         }),
-        "resource": collection.json(inject={k:v.uri for k,v in templates.items()}),
+        "resource": collection.json(inject={k: v.uri for k, v in templates.items()}),
     }
 
     refs = nav.references[tree]
     paths = nav.paths[tree]
 
-    # Three first rows of the specs folr combination of down/ref/start/end
+    # Three first rows of the specs for combination of down/ref/start/end
     if down is None:
         if ref:
-            out["ref"] = get_member_by_path(refs, paths[ref])
+            out["ref"] = {"@type": "CitableUnit", **get_member_by_path(refs, paths[ref])}
         elif start and end:
-            out["start"] = get_member_by_path(refs, paths[start])
-            out["end"] = get_member_by_path(refs, paths[end])
+            out["start"] = {"@type": "CitableUnit", **get_member_by_path(refs, paths[start])}
+            out["end"] = {"@type": "CitableUnit", **get_member_by_path(refs, paths[end])}
         else:
             return msg_4xx(f"The down query parameter is required when requesting without ref or start/end", code=400)
         return Response(json.dumps(out), mimetype="application/json", status=200)
@@ -191,7 +191,7 @@ def navigation_view(resource, ref, start, end, tree, down, templates: Dict[str, 
     if end:
         out["start"] = start
         out["end"] = end
-    else:
+    elif start:
         out["ref"] = start
 
     return Response(json.dumps(out), mimetype="application/ld+json", status=200)
@@ -219,7 +219,7 @@ def create_app(
                 "@id": f"{request.url_root}{request.path}",
                 "@type": "EntryPoint",
                 "collection": collection_template.uri,
-                "navigation" : navigation_template.uri,
+                "navigation": navigation_template.uri,
                 "document": document_template.uri
             }),
             mimetype="application/ld+json"
