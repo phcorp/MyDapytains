@@ -1,7 +1,7 @@
 MyDapytains
 ===========
 
-[![Flask Server Tests](https://github.com/distributed-text-services/MyDapytains/actions/workflows/dts-validator.yml/badge.svg)](https://github.com/distributed-text-services/MyDapytains/actions/workflows/dts-validator.yml)
+[![Flask Server Tests](https://github.com/distributed-text-services/MyDapytains/actions/workflows/dts-validator.yml/badge.svg)](https://github.com/distributed-text-services/MyDapytains/actions/workflows/dts-validator.yml) [![Test](https://github.com/distributed-text-services/MyDapytains/actions/workflows/test.yml/badge.svg)](https://github.com/distributed-text-services/MyDapytains/actions/workflows/test.yml)
 
 *The name of the library is completely temporary*.
 

@@ -17,6 +17,24 @@ from dapitains.app.database import db, Collection, Navigation
 from dapitains.app.navigation import get_nav, get_member_by_path
 
 
+def inject_json(collection: Collection, templates) -> Dict:
+    if collection.resource:
+        inj = {
+            "collection": templates["collection"].partial({"id": collection.identifier}).uri,
+            "document": templates["document"].partial({"resource": collection.identifier}).uri,
+        }
+        if collection.citeStructure:
+            inj["navigation"] = templates["navigation"].partial({"resource": collection.identifier}).uri
+    else:
+        inj = {"collection": templates["collection"].partial({"id": collection.identifier}).uri}
+
+    return {
+        **inj,
+        "totalParents": collection.total_parents,
+        "totalChildren": collection.total_children
+    }
+
+
 def msg_4xx(string, code=404) -> Response:
     return Response(json.dumps({"message": string}), status=code, mimetype="application/json")
 
@@ -41,45 +59,25 @@ def collection_view(
     out = coll.json()
 
     if nav == 'children':
-        related_collections = db.session.query(Collection).filter(
+        members = db.session.query(Collection).filter(
             Collection.parents.any(id=coll.id)
         ).all()
     elif nav == 'parents':
-        related_collections = db.session.query(Collection).filter(
+        members = db.session.query(Collection).filter(
             Collection.children.any(id=coll.id)
         ).all()
     else:
         return msg_4xx(f"nav parameter has a wrong value {nav}", code=400)
-
-    def inject_json(related: Collection) -> Dict:
-        if related.resource:
-            inj = {
-                "collection": templates["collection"].partial({"id": related.identifier}).uri,
-                "document": templates["document"].partial({"resource": related.identifier}).uri,
-            }
-            if related.citeStructure:
-                inj["navigation"] = templates["navigation"].partial({"resource": related.identifier}).uri
-        else:
-            inj ={"collection": templates["collection"].partial({"id": related.identifier}).uri}
-
-        inj.update({
-            "totalParents": related.total_parents,
-            "totalChildren": related.total_children
-        })
-
-        return inj
 
     return Response(json.dumps({
         "@context": "https://distributed-text-services.github.io/specifications/context/1-alpha1.json",
         "dtsVersion": "1-alpha",
         **out,
         "member": [
-            related.json(
-                inject=inject_json(related)
-            )
-            for related in related_collections
+            member.json(inject=inject_json(member, templates=templates))
+            for member in members
         ],
-        **inject_json(coll)
+        **inject_json(coll, templates=templates)
     }, ), mimetype="application/ld+json", status=200)
 
 
