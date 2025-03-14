@@ -1,13 +1,15 @@
 <TEI xmlns="http://www.tei-c.org/ns/1.0">
     <teiHeader>
-        <refsDecl>
-            <citeStructure unit="book" match="//body/div" use="@n">
-                <citeStructure unit="chapter" match="div" use="@n" delim=" ">
-                    <citeStructure unit="verse" match="div" use="@n" delim=":"/>
-                    <citeStructure unit="bloup" match="//l" use="@n" delim="#"/>
+        <encodingDesc>
+            <refsDecl>
+                <citeStructure unit="book" match="//body/div" use="@n">
+                    <citeStructure unit="chapter" match="div" use="@n" delim=" ">
+                        <citeStructure unit="verse" match="div" use="@n" delim=":"/>
+                        <citeStructure unit="bloup" match="//l" use="@n" delim="#"/>
+                    </citeStructure>
                 </citeStructure>
-            </citeStructure>
-        </refsDecl>
+            </refsDecl>
+        </encodingDesc>
     </teiHeader>
     <text>
     <body>

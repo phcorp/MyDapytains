@@ -1,11 +1,13 @@
 <TEI xmlns="http://www.tei-c.org/ns/1.0">
     <teiHeader>
-        <refsDecl n="nums" default="true">
-            <citeStructure unit="book" match="//body/div" use="@n"/>
-        </refsDecl>
-        <refsDecl n="alpha">
-            <citeStructure unit="book" match="//body/div" use="@xml:id"/>
-        </refsDecl>
+        <encodingDesc>
+            <refsDecl n="nums" default="true">
+                <citeStructure unit="book" match="//body/div" use="@n"/>
+            </refsDecl>
+            <refsDecl n="alpha">
+                <citeStructure unit="book" match="//body/div" use="@xml:id"/>
+            </refsDecl>
+        </encodingDesc>
     </teiHeader>
     <text>
         <body>

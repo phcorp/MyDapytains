@@ -11,14 +11,16 @@ local_dir = os.path.join(os.path.dirname(__file__), "tei")
 def test_parsing():
     xml_string = """<TEI xmlns="http://www.tei-c.org/ns/1.0">
     <teiHeader>
-        <refsDecl>
-            <citeStructure unit="book" match="//body/div" use="@n">
-                <citeStructure unit="chapter" match="div" use="position()" delim=" ">
-                    <citeStructure unit="verse" match="div" use="position()" delim=":"/>
-                    <citeStructure unit="bloup" match="l" use="position()" delim="#"/>
+        <encodingDesc>
+            <refsDecl>
+                <citeStructure unit="book" match="//body/div" use="@n">
+                    <citeStructure unit="chapter" match="div" use="position()" delim=" ">
+                        <citeStructure unit="verse" match="div" use="position()" delim=":"/>
+                        <citeStructure unit="bloup" match="l" use="position()" delim="#"/>
+                    </citeStructure>
                 </citeStructure>
-            </citeStructure>
-        </refsDecl>
+            </refsDecl>
+        </encodingDesc>
     </teiHeader>
     <text>
     <body>
