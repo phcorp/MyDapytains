@@ -45,7 +45,7 @@ def test_parsing():
     """
     TEI = PROCESSOR.parse_xml(xml_text=xml_string)
     xpath = get_xpath_proc(elem=TEI)
-    citeStructure = xpath.evaluate_single("/TEI/teiHeader/refsDecl[1]")
+    citeStructure = xpath.evaluate_single("/TEI/teiHeader/encodingDesc/refsDecl[1]")
     parser = CiteStructureParser(citeStructure)
 
     # Generate XPath for "Luke 1:2"
@@ -82,7 +82,7 @@ def test_parsing():
 def test_cite_data():
     TEI = PROCESSOR.parse_xml(xml_file_name=f"{local_dir}/test_citeData.xml")
     xpath = get_xpath_proc(elem=TEI)
-    citeStructure = xpath.evaluate_single("/TEI/teiHeader/refsDecl[1]")
+    citeStructure = xpath.evaluate_single("/TEI/teiHeader/encodingDesc/refsDecl[1]")
     parser = CiteStructureParser(citeStructure)
     refs = parser.find_refs(root=TEI, structure=parser.structure)
     refs = [ref.json() for ref in refs]
@@ -106,7 +106,7 @@ def test_cite_data():
 def test_advanced_cite_data():
     TEI = PROCESSOR.parse_xml(xml_file_name=f"{local_dir}/test_citeData_two_levels.xml")
     xpath = get_xpath_proc(elem=TEI)
-    citeStructure = xpath.evaluate_single("/TEI/teiHeader/refsDecl[1]")
+    citeStructure = xpath.evaluate_single("/TEI/teiHeader/encodingDesc/refsDecl[1]")
     parser = CiteStructureParser(citeStructure)
     refs = parser.find_refs(root=TEI, structure=parser.structure)
     refs = [ref.json() for ref in refs]
