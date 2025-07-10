@@ -31,7 +31,7 @@ jobs:
       - release-build
     environment:
       name: pypi
-      url: https://pypi.org/p/dapitains
+      url: https://pypi.org/p/dapytains
     permissions:
       id-token: write
     steps:
