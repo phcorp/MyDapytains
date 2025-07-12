@@ -11,6 +11,7 @@ except ImportError:
 
 import json
 import lxml.etree as ET
+import os
 from dapytains.tei.document import Document
 from dapytains.errors import InvalidRangeOrder
 from dapytains.app.database import db, Collection, Navigation
@@ -279,7 +280,7 @@ if __name__ == "__main__":
         db.drop_all()
         db.create_all()
 
-        catalog, _ = parse(f"{basedir}/../../tests/catalog/example-collection.xml")
+        catalog, _ = parse(os.getenv("DTSCATALOG", f"{basedir}/../../tests/catalog/example-collection.xml"))
         store_catalog(catalog)
 
     app.run()
