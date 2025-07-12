@@ -178,6 +178,55 @@ def test_overlapping_single_uneven_lb_range():
     assert _to_string(x) == _to_string(doc.get_passage("2", "5"))
 
 
+def test_double_matching_lb_as_ref():
+    doc = Document(os.path.join(p, "tei/double_tree_lb.xml"))
+    assert normalize_xpath(xpath_split("/TEI/text/body/div[@type='edition']//lb[@n='1']")
+                           ) == ['TEI', 'text', 'body', "div[@type='edition']", "/lb[@n='1']"]
+    x = reconstruct_doc(
+        doc.xml,
+        start_xpath=normalize_xpath(xpath_split("/TEI/text/body/div[@type='edition']//lb[@n='1']")),
+        end_xpath=normalize_xpath(xpath_split("/TEI/text/body/div[@type='edition']//lb[@n='1']")),
+        start_siblings="lb[@n='2']"
+    )
+    assert _to_string(x) == """<TEI xmlns="http://www.tei-c.org/ns/1.0"><text>
+        <body>
+            <div type="edition">
+                <ab>
+                    <lb n="1"/>Ἰουλίας ΒαλΛίλλης· </ab>
+                </div>
+            </body>
+    </text>
+</TEI>"""
+    assert _to_string(x) == _to_string(doc.get_passage("1", tree="default"))
+
+def test_double_matching_lb_as_range():
+    doc = Document(os.path.join(p, "tei/double_tree_lb.xml"))
+    x = reconstruct_doc(
+        doc.xml,
+        start_xpath=normalize_xpath(xpath_split("/TEI/text/body/div[@type='edition']//lb[@n='2']")),
+        end_xpath=normalize_xpath(xpath_split("/TEI/text/body/div[@type='edition']//lb[@n='5']")),
+        end_siblings="lb[@n='6']"
+    )
+    assert _to_string(x) == """<TEI xmlns="http://www.tei-c.org/ns/1.0"><text>
+        <body>
+            <div type="edition">
+                <ab>
+                    <lb n="2"/>ὅτε ἤκουσε τοῦ Μέμνος <lb n="3"/>ὁ
+                    Σεβαστὸς Ἁδριανός. </ab>
+                <lg>
+                    <l n="1">
+                        <lb n="4"/>Μέμνονα πυνθανόμαν Αἰγύπτιον, ἀλίω αὔγαι</l>
+                    <l n="2">
+                        <lb n="5"/>αἰθόμενον, φώνην ΘηβαΐΧω ’πυ λίθω.</l>
+                    <l n="3">
+                        </l>
+                    </lg>
+            </div>
+            </body>
+    </text>
+</TEI>"""
+    assert _to_string(x) == _to_string(doc.get_passage("2", '5', tree="default"))
+
 if __name__ == "__main__":
     doc = Document(os.path.join(p, "tei/lb_diff_ab.xml"))
     x = reconstruct_doc(

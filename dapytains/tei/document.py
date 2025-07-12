@@ -1,3 +1,5 @@
+from saxonche import PyXPathProcessor
+
 from dapytains.tei.citeStructure import CiteStructureParser, CitableUnit
 from dapytains.constants import PROCESSOR, get_xpath_proc, saxonlib
 from typing import Optional, List, Tuple, Dict
@@ -14,7 +16,7 @@ def xpath_split(string: str) -> List[str]:
     return [x for x in re.split(r"/(/?[^/]+)", string) if x]
 
 
-def xpath_walk(xpath: List[str]) -> Tuple[str, List[str]]:
+def xpath_walk(xpath: List[str]) -> Tuple[str, List[str], List[str]]:
     """ Format at XPath for perform XPath
 
     :param xpath: XPath element lists
@@ -23,14 +25,14 @@ def xpath_walk(xpath: List[str]) -> Tuple[str, List[str]]:
     """
     if len(xpath) > 1:
         current, queue = xpath[0], xpath[1:]
-        current = "./{}[./{}]".format(
+        current_filled = "./{}[./{}]".format(
             current,
             "/".join(queue)
         )
     else:
-        current, queue = "./{}".format(xpath[0]), []
+        current_filled, queue = "./{}".format(xpath[0]), []
 
-    return current, queue
+    return current_filled, queue, [xpath[0]] if len(xpath) > 1 else []
 
 
 def is_traversing_xpath(parent: saxonlib.PyXdmNode, xpath: str) -> bool:
@@ -82,14 +84,14 @@ def _get_text(context, xpath: str) -> Optional[str]:
         f"{xpath}"
     ))
 
-def _get_sibling_xpath(node_xpath: str) -> str:
+def _get_sibling_xpath(node_xpath: str, prefix: str = ".", ancestor: str = "") -> str:
     if node_xpath == "node()":
         return "./following-sibling::node()"
     return (f"."
             f"/following-sibling::node()"
             f"["
             f"("
-            f"following-sibling::*[descendant-or-self::{node_xpath}] or .//{node_xpath}"
+            f"following-sibling::*[{prefix}/descendant-or-self::{node_xpath}] or {prefix}//{node_xpath}"
             f") "
             f"and not(self::{node_xpath})"
             f"]")
@@ -173,7 +175,8 @@ def copy_node(
             return element
         elif parent is not None:
             if not parent.getchildren():
-                parent.text += element
+                if not isinstance(parent, StringElement):
+                    parent.text += element
             else:
                 parent.getchildren()[-1].tail = element
             return parent
@@ -221,13 +224,38 @@ def normalize_xpath(xpath: List[str]) -> List[str]:
     return new_xpath
 
 
-def _treat_siblings(context_node: saxonlib.PyXdmNode, last_node: ElementBase, xpath: str) -> Optional[ElementBase]:
+def reverse_ancestor(xpaths: List[str]) -> str:
+    if not xpaths:
+        return ""
+    strip = re.compile(r"^([./]+)")
+    here = f"[ancestor::{strip.sub('', xpaths[0])}{reverse_ancestor(xpaths[1:]) if len(xpaths) > 1 else ''}]"
+    return here
+
+
+def _treat_siblings(
+        context_node: saxonlib.PyXdmNode,
+        last_node: ElementBase,
+        xpath: str,
+        ancestor_list: Optional[List[str]] = None
+) -> Optional[ElementBase]:
+    """ Copies siblings of the nodes that needs to be copied as content
+
+    :param context_node: Node against which xPath are run
+    :param last_node: Node on which data is created
+    :param xpath: xPath of the sibling
+    :param prefix: Ancestor path for the sibling at this point
+    """
     xproc = get_xpath_proc(context_node)
-    if xproc.effective_boolean_value(f"not(following-sibling::{xpath} or .//{xpath} or following-sibling::*[.//{xpath}])"):
+    loc_xpath = xpath
+    if ancestor_list:
+        loc_xpath += f"{reverse_ancestor(ancestor_list[::-1])}"
+
+    if xproc.effective_boolean_value(f"not(following-sibling::{loc_xpath} or .//{loc_xpath} or following-sibling::*[{loc_xpath}])"):
         new_xpath = _get_sibling_xpath("node()")
     else:
-        new_xpath = _get_sibling_xpath(xpath)
-    for node in (xproc.evaluate(new_xpath) or []):
+        new_xpath = _get_sibling_xpath(loc_xpath)
+
+    for node in xpath_eval(xproc, new_xpath):
         if node.node_kind_str == "text":
             if not last_node.tail:
                 last_node.tail = _get_text(node, ".")
@@ -242,13 +270,28 @@ def _treat_siblings(context_node: saxonlib.PyXdmNode, last_node: ElementBase, xp
             else:
                 last_node = copy_node(node, include_children=True, parent=last_node.getparent())
 
+
+def xpath_eval(proc: PyXPathProcessor, xpath) -> List:
+    return proc.evaluate(xpath) or []
+
+
+def clean_xpath_for_following(current_xpath: str, traversing: bool) -> str:
+    if traversing and current_xpath.startswith(".//"):
+        return f"*[{current_xpath}]"
+    elif not traversing and current_xpath.startswith(".//"):
+        return current_xpath[3:]
+    else:
+        return current_xpath[2:]
+
+
 def reconstruct_doc(
     root: saxonlib.PyXdmNode,
     start_xpath: List[str],
     new_tree: Optional[Element] = None,
     end_xpath: Optional[List[str]] = None,
     start_siblings: Optional[str] = None,
-    end_siblings: Optional[str] = None
+    end_siblings: Optional[str] = None,
+    copy_until: bool = False
 ) -> Element:
     """ Loop over passages to construct and increment new tree given a parent and XPaths
 
@@ -262,9 +305,8 @@ def reconstruct_doc(
     :param end_siblings: If siblings of end need to be captured, provide XPath here.
     :return: Newly incremented tree
 
-    toDo: Check if start_xpath should not be provided in the context of a range ?
     """
-    current_start, queue_start = xpath_walk(start_xpath)
+    current_start, queue_start, ancestor_start = xpath_walk(start_xpath)
     xproc = get_xpath_proc(root)
     # There are too possibilities:
     #  1. What we call loop is when the first element that match this XPath, such as "//body", then we will need
@@ -285,7 +327,7 @@ def reconstruct_doc(
 
     # If we were not in any single edge case for end_xpath, run the xpath_walk
     if current_end is None:
-        current_end, queue_end = xpath_walk(end_xpath)
+        current_end, queue_end, ancestor_end = xpath_walk(end_xpath)
 
     # Here, we start by comparing both XPath, in case we have a single XPath
     current_1_is_current_2 = start_xpath == end_xpath
@@ -295,6 +337,14 @@ def reconstruct_doc(
         current_1_is_current_2 = xproc.effective_boolean_value(f"head({current_start}) is head({current_end})")
 
     if current_1_is_current_2:
+
+        # If we need to copy preceding node, because we got uneven weird things
+        if copy_until:
+            xpath = get_xpath_proc(root)
+            for sibling in xpath_eval(xpath, f"./node()[following-sibling::{clean_xpath_for_following(current_start, start_is_traversing)}]"):
+                copy_node(sibling, include_children=True, parent=new_tree)
+
+
         # We get the children if the XPath stops here
         # We copy the node we found
         copied_node = copy_node(
@@ -323,7 +373,8 @@ def reconstruct_doc(
                 end_siblings=end_siblings
             )
         if start_siblings:
-            _treat_siblings(context_node=result_start, xpath=start_siblings, last_node=copied_node)
+            _treat_siblings(context_node=result_start, xpath=start_siblings, last_node=copied_node,
+                            ancestor_list=ancestor_start)
     else:
         # If we still don't have the same children as a result of start and end,
         #   We make sure to retrieve the element at the end of 2
@@ -357,38 +408,33 @@ def reconstruct_doc(
         #  For this reason, we need to change matching xpath (ie. ./div[position()=1]) into compatible
         #  suffixes with preceding-sibling or following-sibling.
         # We do that for start and end
-        if start_is_traversing and current_start.startswith(".//"):
-            sib_current_start = f"*[{current_start}]"
-        elif not start_is_traversing and current_start.startswith(".//"):
-            sib_current_start = current_start[3:]
-        else:
-            sib_current_start = current_start[2:]
-        if end_is_traversing and current_end.startswith(".//"):
-            sib_current_end = f"*[{current_end}]"
-        elif not end_is_traversing and current_end.startswith(".//"):
-            sib_current_end = current_end[3:]
-        else:
-            sib_current_end = current_end[2:]
+        sib_current_start = clean_xpath_for_following(current_start, start_is_traversing)
+        sib_current_end = clean_xpath_for_following(current_end, end_is_traversing)
 
         # We look for siblings between start and end matches
         xpath = get_xpath_proc(root)
-
-        for sibling in (xpath.evaluate(
-                f"./node()[preceding-sibling::{sib_current_start} and following-sibling::{sib_current_end}]") or []):
+        for sibling in xpath_eval(xpath, f"./node()[preceding-sibling::{sib_current_start} and following-sibling::{sib_current_end}]"):
             copy_node(sibling, include_children=True, parent=new_tree)
 
         # Here we reached the end, logically.
         node = copy_node(node=result_end, include_children=len(queue_end) == 0, parent=new_tree)
+
         if queue_end:
+            # Check if the first element is the same as queue_end
+            preview, *_ = xpath_walk(queue_end)
+            xproc.set_context(xdm_item=result_end)
+            print(f"head(./element()[1]) is head({preview})")
+
             reconstruct_doc(
                 root=result_end,
                 new_tree=node,
                 start_xpath=queue_end,
                 end_xpath=queue_end,
                 start_siblings=end_siblings,
+                copy_until=not xproc.effective_boolean_value(f"head(./element()[1]) is head({preview})")
             )
         if end_siblings:
-            _treat_siblings(context_node=result_end, xpath=end_siblings, last_node=node)
+            _treat_siblings(context_node=result_end, xpath=end_siblings, last_node=node, ancestor_list=ancestor_end)
 
     return new_tree
 
@@ -400,7 +446,7 @@ class Document:
         self.citeStructure: Dict[Optional[str], CiteStructureParser] = {}
 
         default = None
-        for refsDecl in self.xpath_processor.evaluate("/TEI/teiHeader/encodingDesc/refsDecl[./citeStructure]"):
+        for refsDecl in xpath_eval(self.xpath_processor, "/TEI/teiHeader/encodingDesc/refsDecl[./citeStructure]"):
             struct = CiteStructureParser(refsDecl)
 
             self.citeStructure[refsDecl.get_attribute_value("n") or "default"] = struct
@@ -449,6 +495,7 @@ class Document:
                 next_ref = self.get_next(tree, start).ref
                 next_ref_xpath = normalize_xpath(xpath_split(self.citeStructure[tree].generate_xpath(next_ref)))[-1]
                 start_sibling = next_ref_xpath.strip("/")
+
 
         root = reconstruct_doc(
             self.xml,
