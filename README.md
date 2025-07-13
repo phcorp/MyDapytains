@@ -49,3 +49,12 @@ given repository. We are currently looking at using external file that would hel
 the option to load up metadata yourself.
 
 The current schema for the collection catalog ingestion is available in [./tests/catalog/schema.rng](./tests/catalog/schema.rng).
+
+
+## Support
+
+Funded via the CLLG Project.
+
+Ce travail a bénéficié d’une aide de l’État gérée par l’Agence Nationale de la
+Recherche au titre de France 2030 portant la référence « ANR-24-RRII- 0002 » et opéré par
+le Programme Inria Quadrant.
