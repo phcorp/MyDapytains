@@ -53,16 +53,15 @@ endif
 	$(PYTHON) -m dapytains.app.app
 
 test:
+ifeq ($(SERVER_ENV),"prod")
+	$(error "Tests cannot run in 'prod' environment")
+endif
 ifeq ($(VERBOSE),1)
 	$(MAKE) install
 else
 	@$(MAKE) install > /dev/null
 endif
-ifeq ($(SERVER_ENV),"prod")
-	$(error "Tests cannot run in 'prod' environment")
-else
 	$(PYTEST) --doctest-modules --cov=dapytains --verbose
-endif
 
 docker-shell: docker-start
 	$(DOCKER_COMPOSE) exec app zsh
