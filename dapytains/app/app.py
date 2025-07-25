@@ -17,6 +17,9 @@ from dapytains.errors import InvalidRangeOrder
 from dapytains.app.database import db, Collection, Navigation
 from dapytains.app.navigation import get_nav, get_member_by_path
 from dapytains.app.transformer import Transformer, GeneralisticXSLTransformer
+from dotenv_flow import dotenv_flow
+
+dotenv_flow(os.getenv("SERVER_ENV", "prod"))
 
 
 def inject_json(collection: Collection, templates) -> Dict:
@@ -273,9 +276,6 @@ if __name__ == "__main__":
     import os
     from dapytains.app.ingest import store_catalog
     from dapytains.metadata.xml_parser import parse
-    from dotenv_flow import dotenv_flow
-
-    dotenv_flow()
 
     app = Flask(__name__)
     _, db = create_app(app)
@@ -291,4 +291,8 @@ if __name__ == "__main__":
         catalog, _ = parse(os.getenv("DTSCATALOG", "tests/catalog/example-collection.xml"))
         store_catalog(catalog)
 
-    app.run(debug=True, host=os.getenv("SERVER_HOST", "0.0.0.0"), port=os.getenv("SERVER_PORT", 5000))
+    if 'prod' != os.getenv("SERVER_ENV", "prod"):
+        app.run(debug=True, host=os.getenv("SERVER_HOST", "0.0.0.0"), port=os.getenv("SERVER_PORT", 5000))
+    else:
+        from waitress import serve
+        serve(app, host=os.getenv("SERVER_HOST", "0.0.0.0"), port=os.getenv("SERVER_PORT", 5000))
