@@ -193,6 +193,14 @@ def navigation_view(resource, ref, start, end, tree, down, templates: Dict[str, 
 
     return Response(json.dumps(out), mimetype="application/ld+json", status=200)
 
+def get_templates(
+    base_uri: str
+):
+    collection_template = uritemplate.URITemplate(base_uri+"collection/{?id}{&nav}")
+    document_template = uritemplate.URITemplate(base_uri+"document/{?resource}{&ref,start,end,tree}")
+    navigation_template = uritemplate.URITemplate(base_uri+"navigation/{?resource}{&ref,start,end,tree,down}")
+
+    return collection_template, document_template, navigation_template
 
 def create_app(
         app: Flask,
@@ -204,21 +212,19 @@ def create_app(
 
     Initialisation of the DB is up to you
     """
-    navigation_template = uritemplate.URITemplate(base_uri+"/navigation/{?resource}{&ref,start,end,tree,down}")
-    collection_template = uritemplate.URITemplate(base_uri+"/collection/{?id}{&nav}")
-    document_template = uritemplate.URITemplate(base_uri+"/document/{?resource}{&ref,start,end,tree}")
-
     @app.route("/")
     def index_route():
+        collection_template, document_template, navigation_template = get_templates(request.url_root)
+
         return Response(
             json.dumps({
                 "@context": "https://distributed-text-services.github.io/specifications/context/1-alpha1.json",
                 "dtsVersion": "1-alpha",
-                "@id": f"{request.url_root}{request.path}",
+                "@id": f"{request.url_root}",
                 "@type": "EntryPoint",
                 "collection": collection_template.uri,
                 "navigation": navigation_template.uri,
-                "document": document_template.uri
+                "document": document_template.uri,
             }),
             mimetype="application/ld+json"
         )
@@ -227,6 +233,7 @@ def create_app(
     def collection_route():
         resource = request.args.get("id")
         nav = request.args.get("nav", "children")
+        collection_template, document_template, navigation_template = get_templates(request.url_root)
 
         return collection_view(resource, nav, templates={
             "navigation": navigation_template,
@@ -242,6 +249,7 @@ def create_app(
         end = request.args.get("end")
         tree = request.args.get("tree")
         down = request.args.get("down", type=int, default=None)
+        collection_template, document_template, navigation_template = get_templates(request.url_root)
 
         return navigation_view(resource, ref, start, end, tree, down, templates={
             "navigation": navigation_template.partial({"resource": resource}),
@@ -266,13 +274,14 @@ if __name__ == "__main__":
     import os
     from dapytains.app.ingest import store_catalog
     from dapytains.metadata.xml_parser import parse
+    from dotenv_flow import dotenv_flow
+
+    dotenv_flow()
 
     app = Flask(__name__)
-    _, db = create_app(app, base_uri="http://localhost:5000")
+    _, db = create_app(app)
 
-    basedir = os.path.abspath(os.path.dirname(__file__))
-    db_path = os.path.join(basedir, 'app.db')
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URI", "sqlite:///../app.db")
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
@@ -280,7 +289,7 @@ if __name__ == "__main__":
         db.drop_all()
         db.create_all()
 
-        catalog, _ = parse(os.getenv("DTSCATALOG", f"{basedir}/../../tests/catalog/example-collection.xml"))
+        catalog, _ = parse(os.getenv("DTSCATALOG", "tests/catalog/example-collection.xml"))
         store_catalog(catalog)
 
-    app.run()
+    app.run(debug=True, host=os.getenv("SERVER_HOST", "0.0.0.0"), port=os.getenv("SERVER_PORT", 5000))

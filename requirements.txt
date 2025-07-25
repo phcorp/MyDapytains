@@ -1,7 +1,8 @@
+click==8.2.1
+dotenv-flow==0.4.0
+flask==3.1.1
+flask-sqlalchemy==3.1.1
+lxml==6.0.0
 saxonche==12.8.0
-lxml
-flask
-flask-sqlalchemy
-click
-uritemplate
-tqdm
+tqdm==4.67.1
+uritemplate==4.2.0

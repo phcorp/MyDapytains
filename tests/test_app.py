@@ -8,14 +8,14 @@ import uritemplate
 import urllib
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-BASE_URI = "http://localhost:5000"
+BASE_URI = "http://localhost"
 
 
 @pytest.fixture
 def app():
     """Fixture to create a new instance of the Flask app for testing."""
     app = Flask(__name__)
-    app, db = create_app(app, base_uri=BASE_URI)
+    app, db = create_app(app)
     db_path = os.path.join(basedir, 'app.db')
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -52,12 +52,12 @@ def test_index(client):
     assert response.status_code == 200
     assert response.get_json() == {
         '@context': 'https://distributed-text-services.github.io/specifications/context/1-alpha1.json',
-        '@id': 'http://localhost//',
+        '@id': 'http://localhost/',
         '@type': 'EntryPoint',
         'dtsVersion': '1-alpha',
-        'collection': 'http://localhost:5000/collection/{?id}{&nav}',
-        'document': 'http://localhost:5000/document/{?resource}{&ref,start,end,tree}',
-        'navigation': 'http://localhost:5000/navigation/{?resource}{&ref,start,end,tree,down}',
+        'collection': 'http://localhost/collection/{?id}{&nav}',
+        'document': 'http://localhost/document/{?resource}{&ref,start,end,tree}',
+        'navigation': 'http://localhost/navigation/{?resource}{&ref,start,end,tree,down}',
     }
 
 
@@ -70,14 +70,14 @@ def test_collection(client):
                '@context': 'https://distributed-text-services.github.io/specifications/context/1-alpha1.json',
                '@id': 'https://foo.bar/default',
                '@type': 'Collection',
-               'collection': 'http://localhost:5000/collection/?id=https%3A%2F%2Ffoo.bar%2Fdefault{&nav}',
+               'collection': 'http://localhost/collection/?id=https%3A%2F%2Ffoo.bar%2Fdefault{&nav}',
                'dtsVersion': '1-alpha',
                'dublinCore': {'abstract': ['This is a perfect example of an absract.',
                                            {'lang': 'fr',
                                             'value': 'Et je peux traduire en français'}]},
                'member': [{'@id': 'https://example.org/collection1',
                            '@type': 'Collection',
-                           'collection': 'http://localhost:5000/collection/?id=https%3A%2F%2Fexample.org%2Fcollection1{&nav}',
+                           'collection': 'http://localhost/collection/?id=https%3A%2F%2Fexample.org%2Fcollection1{&nav}',
                            'dublinCore': {'creator': ['John Doe'],
                                           'date': ['2023-08-24'],
                                           'subject': ['History']},
@@ -92,16 +92,16 @@ def test_collection(client):
                                              {'@type': 'CitationTree',
                                               'citeType': 'book',
                                               'identifier': 'alpha'}],
-                           'collection': 'http://localhost:5000/collection/?id=https%3A%2F%2Fexample.org%2Fresource1{&nav}',
+                           'collection': 'http://localhost/collection/?id=https%3A%2F%2Fexample.org%2Fresource1{&nav}',
                            'description': 'A document about historical events.',
-                           'document': 'http://localhost:5000/document/?resource=https%3A%2F%2Fexample.org'
+                           'document': 'http://localhost/document/?resource=https%3A%2F%2Fexample.org'
                                        '%2Fresource1{&ref,start,end,tree}',
                            'dublinCore': {'language': ['en'], 'subject': ['World War II']},
                            'extensions': {'https://example.org/commentcomment': ['Very '
                                                                                  'informative '
                                                                                  'document.'],
                                           'https://example.org/ratingrating': ['5 stars']},
-                           'navigation': 'http://localhost:5000/navigation/?resource=https%3A%2F%2Fexample.org'
+                           'navigation': 'http://localhost/navigation/?resource=https%3A%2F%2Fexample.org'
                                          '%2Fresource1{&ref,start,end,tree,down}',
                            'title': 'Historical Document',
                            'totalChildren': 0,
@@ -114,13 +114,13 @@ def test_collection(client):
                                                                  'citeType': 'chapter'}],
                                               'citeType': 'book',
                                               'identifier': 'default'}],
-                           'collection': 'http://localhost:5000/collection/?id=https%3A%2F%2Ffoo.bar%2Ftext{&nav}',
+                           'collection': 'http://localhost/collection/?id=https%3A%2F%2Ffoo.bar%2Ftext{&nav}',
                            'description': 'With a description',
-                           'document': 'http://localhost:5000/document/?resource=https%3A%2F%2Ffoo.bar%2Ftext{&ref,'
+                           'document': 'http://localhost/document/?resource=https%3A%2F%2Ffoo.bar%2Ftext{&ref,'
                                        'start,end,tree}',
                            'dublinCore': {'title': ['A simple resource']},
                            'extensions': {'https://foaf.com/foafsomething': ['Truc']},
-                           'navigation': 'http://localhost:5000/navigation/?resource=https%3A%2F%2Ffoo.bar%2Ftext{'
+                           'navigation': 'http://localhost/navigation/?resource=https%3A%2F%2Ffoo.bar%2Ftext{'
                                          '&ref,start,end,tree,down}',
                            'title': 'A simple resource',
                            'totalChildren': 0,
@@ -136,7 +136,7 @@ def test_collection(client):
     assert {'@context': 'https://distributed-text-services.github.io/specifications/context/1-alpha1.json',
             '@id': 'https://example.org/collection1',
             '@type': 'Collection',
-            'collection': 'http://localhost:5000/collection/?id=https%3A%2F%2Fexample.org%2Fcollection1{&nav}',
+            'collection': 'http://localhost/collection/?id=https%3A%2F%2Fexample.org%2Fcollection1{&nav}',
             'dtsVersion': '1-alpha',
             'dublinCore': {'creator': ['John Doe'],
                            'date': ['2023-08-24'],
@@ -149,9 +149,9 @@ def test_collection(client):
                                           {'@type': 'CitationTree',
                                            'citeType': 'book',
                                            'identifier': 'alpha'}],
-                        'collection': 'http://localhost:5000/collection/?id=https%3A%2F%2Fexample.org%2Fresource1{&nav}',
+                        'collection': 'http://localhost/collection/?id=https%3A%2F%2Fexample.org%2Fresource1{&nav}',
                         'description': 'A document about historical events.',
-                        'document': 'http://localhost:5000/document/?resource=https%3A%2F%2Fexample.org%2Fresource1{'
+                        'document': 'http://localhost/document/?resource=https%3A%2F%2Fexample.org%2Fresource1{'
                                     '&ref,start,end,tree}',
                         'dublinCore': {'language': ['en'], 'subject': ['World War II']},
                         'extensions': {
@@ -162,7 +162,7 @@ def test_collection(client):
                                 '5 stars',
                             ],
                         },
-                        'navigation': 'http://localhost:5000/navigation/?resource=https%3A%2F%2Fexample.org'
+                        'navigation': 'http://localhost/navigation/?resource=https%3A%2F%2Fexample.org'
                                       '%2Fresource1{&ref,start,end,tree,down}',
                         'title': 'Historical Document',
                         'totalChildren': 0,
