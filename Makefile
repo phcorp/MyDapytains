@@ -24,7 +24,10 @@ endif
 
 help:
 	@echo "$(COLOR_YELLOW)Usage:$(COLOR_END)"
-	@echo "  make [target]"
+	@echo "  make [target] [VARIABLE=value]"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Example:$(COLOR_END)"
+	@echo "  make start VERBOSE=1"
 	@echo ""
 	@echo "$(COLOR_YELLOW)Available targets:$(COLOR_END)"
 	@echo "$(COLOR_GREEN)  install     $(COLOR_END) Installs dependencies from requirements.txt"
