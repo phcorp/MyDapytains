@@ -204,7 +204,6 @@ def get_templates(
 
 def create_app(
         app: Flask,
-        base_uri: str,
         use_query: bool = False,
         media_transformer: Transformer = Transformer()
 ) -> (Flask, SQLAlchemy):

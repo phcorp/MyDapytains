@@ -9,7 +9,10 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+# Install Oh My Zsh (https://ohmyz.sh/)
+RUN curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/70f0e5285f802ce6eb7feea4588ff8917246233e/tools/install.sh > install.sh
+RUN echo "fbfcd1c0bf99acfcf77f7f999d75bb8c833d3b58643b603b3971d8cd1991fc2e install.sh" | sha256sum --check
+RUN chmod +x install.sh && ./install.sh && rm install.sh
 
 COPY . /app
 
