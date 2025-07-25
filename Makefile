@@ -8,6 +8,7 @@ PIP             ?= pip
 PYTEST          ?= pytest
 PYTHON          ?= python
 SERVER_ENV      ?= prod
+VERBOSE         ?= 0
 
 COLOR_SUPPORT   ?= $(shell [ "$$(tput colors 2>/dev/null)" -ge 8 ] && echo 1 || echo 0)
 COLOR_GREEN      =
@@ -41,11 +42,19 @@ ifneq ($(SERVER_ENV),"prod")
 endif
 
 start:
+ifeq ($(VERBOSE),1)
+	$(MAKE) install
+else
 	@$(MAKE) install > /dev/null
+endif
 	$(PYTHON) -m dapytains.app.app
 
 test:
+ifeq ($(VERBOSE),1)
+	$(MAKE) install
+else
 	@$(MAKE) install > /dev/null
+endif
 ifeq ($(SERVER_ENV),"prod")
 	$(error "Tests cannot run in 'prod' environment")
 else
