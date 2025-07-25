@@ -40,11 +40,17 @@ ifneq ($(SERVER_ENV),"prod")
 	$(PIP) install -r requirements-dev.txt
 endif
 
-start: install
+start:
+	@$(MAKE) install > /dev/null
 	$(PYTHON) -m dapytains.app.app
 
 test:
+	@$(MAKE) install > /dev/null
+ifeq ($(SERVER_ENV),"prod")
+	$(error "Tests cannot run in 'prod' environment")
+else
 	$(PYTEST) --doctest-modules --cov=dapytains --verbose
+endif
 
 docker-shell: docker-start
 	$(DOCKER_COMPOSE) exec app zsh
