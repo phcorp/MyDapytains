@@ -291,7 +291,7 @@ if __name__ == "__main__":
         catalog, _ = parse(os.getenv("DTSCATALOG", "tests/catalog/example-collection.xml"))
         store_catalog(catalog)
 
-    if 'prod' != os.getenv("SERVER_ENV", "prod"):
+    if "prod" != os.getenv("SERVER_ENV", "prod"):
         app.run(debug=True, host=os.getenv("SERVER_HOST", "0.0.0.0"), port=os.getenv("SERVER_PORT", 5000))
     else:
         from waitress import serve
