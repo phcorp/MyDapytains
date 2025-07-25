@@ -17,7 +17,7 @@ ifeq ($(COLOR_SUPPORT),1)
 	COLOR_END    = \033[0m
 endif
 
-.PHONY: help install start docker-start docker-stop
+.PHONY: help install start docker-shell docker-start docker-stop
 
 help:
 	@echo "$(COLOR_YELLOW)Usage:$(COLOR_END)"
