@@ -40,7 +40,7 @@ ifneq ($(SERVER_ENV),"prod")
 	$(PIP) install -r requirements-dev.txt
 endif
 
-start:
+start: install
 	$(PYTHON) -m dapytains.app.app
 
 test:
