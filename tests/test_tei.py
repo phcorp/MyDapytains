@@ -176,5 +176,19 @@ def test_get_next_on_last():
          '</body>\n'
          '</text>\n'
          '</TEI>'), "Default works"
-
+    # And now uneven with an ending node
+    doc = Document(f"{local_dir}/lb_uneven_ab_ending_node.xml")
+    assert tostring(
+        doc.get_passage(tree=None, ref_or_start="7"), encoding=str
+    ) == ('<TEI xmlns="http://www.tei-c.org/ns/1.0"><text>\n'
+         '<body>\n'
+         '<div xml:lang="grc" type="edition" xml:space="preserve">\n'
+         '<ab>\n'
+         '<w><lb n="7"/>εὖ</w> εἴη, ἐφιορκοῦντι δὲ τὰ ἐναντία.<span>There is something there<w>'
+          'That never changes</w></span>\n'
+         '</ab>\n'
+         '</div>\n'
+         '</body>\n'
+         '</text>\n'
+         '</TEI>'), "Default works"
 

@@ -141,7 +141,7 @@ def copy_node(
         node: saxonlib.PyXdmNode,
         include_children=False,
         parent: Optional[Element] = None,
-        remove_milestone: Optional[str] = None
+        remove_milestone: Optional[Union[str, int]] = None
 ):
     """ Copy an XML Node
 
@@ -154,7 +154,7 @@ def copy_node(
     if include_children:
         # We simply go from the element as a string to an element as XML.
         # We need to workaround false indentation through this xQuery
-        if remove_milestone:
+        if isinstance(remove_milestone, str):
             element = _prune(node, remove_milestone)
         else:
             xq = PROCESSOR.new_xquery_processor()
