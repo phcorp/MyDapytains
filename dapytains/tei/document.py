@@ -458,8 +458,8 @@ def reconstruct_doc(
 
 
 class Document:
-    def __init__(self, file_path: str):
-        self.xml_processor = get_processor()
+    def __init__(self, file_path: str, processor: Optional[saxonlib.PySaxonProcessor] = None):
+        self.xml_processor = processor if isinstance(processor, saxonlib.PySaxonProcessor) else get_processor()
         self.xml = self.xml_processor.parse_xml(xml_file_name=file_path)
         self.xpath_processor = get_xpath_proc(elem=self.xml, processor=self.xml_processor)
         self.citeStructure: Dict[Optional[str], CiteStructureParser] = {}
