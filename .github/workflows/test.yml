@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -r requirements.txt
-        pip install pytest pytest-cov coveralls pytest-sugar requests-mock
+        pip install -r requirements-dev.txt
     - name: Run Tests
       run: |
         pytest --doctest-modules --cov=dapytains --verbose
