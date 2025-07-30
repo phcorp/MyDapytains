@@ -53,12 +53,12 @@ endif
 lint: lint-autopep8
 
 lint-autopep8:
-	$(AUTOPEP8) --diff --exit-code --recursive dapytains tests
+	$(AUTOPEP8) -v --diff --exit-code --recursive dapytains tests
 
 lint-fix: lint-fix-autopep8
 
 lint-fix-autopep8:
-	$(AUTOPEP8) --in-place --recursive dapytains tests
+	$(AUTOPEP8) -v --in-place --recursive dapytains tests
 
 start:
 ifeq ($(VERBOSE),1)
